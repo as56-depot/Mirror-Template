@@ -1,0 +1,63 @@
+name: Weekly Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+env:
+  UPSTREAM_URL: false
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Sync latest commits from upstream
+
+    permissions:
+      contents: write
+      actions: write
+    
+    steps:
+    - name: Checkout target repo
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: true
+
+    - name: Configure Git
+      run: |
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
+
+    - name: Sync Upstream
+      id: sync_step
+      run: |
+        git remote add upstream $UPSTREAM_URL
+        git fetch upstream
+
+        UPSTREAM_BRANCH=$(git remote set-head upstream -a > /dev/null && git symbolic-ref refs/remotes/upstream/HEAD | sed 's@^refs/remotes/upstream/@@')
+        
+        git merge upstream/$UPSTREAM_BRANCH --allow-unrelated-histories --no-commit --no-ff || CONFLICT=true
+
+        if [ -d ".github/workflows" ]; then
+          mkdir -p .github/upstream-ci
+          git archive MERGE_HEAD .github/workflows | tar -x -C .github/upstream-ci --strip-components=2
+        fi
+
+        git checkout HEAD -- .github/
+
+        if [ "$CONFLICT" = true ]; then
+          if git diff --name-only --diff-filter=U | grep -q .; then
+            echo "Real conflicts detected!"
+            exit 1
+          fi
+        fi
+
+        git add .
+        if ! git diff --cached --exit-code --quiet; then
+          echo "Changes detected, committing..."
+          git commit -m "chore: weekly sync from upstream ($UPSTREAM_BRANCH): $(date +'%Y-%m-%d')"
+          git push origin main --force
+        else
+          echo "No changes to sync."
+        fi
