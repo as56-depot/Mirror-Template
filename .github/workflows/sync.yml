@@ -18,6 +18,13 @@ jobs:
       actions: write
     
     steps:
+    - name: Check if UPSTREAM_URL is set
+      run: |
+        if [[ "${{ env.UPSTREAM_URL }}" == "false" ]]; then
+          echo "UPSTREAM_URL is still 'false'. This is likely the template repo. Stopping."
+          exit 0
+        fi
+    
     - name: Checkout target repo
       uses: actions/checkout@v4
       with:
