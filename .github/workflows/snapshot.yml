@@ -1,0 +1,31 @@
+name: Repo Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 */4 *'
+
+jobs:
+  create_fossil:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create and Push Tag
+        run: |
+          git config --global user.name 'Snapshot Bot'
+          git config --global user.email 'bot@github.com'
+          
+          TAG_NAME="snapshot-$(date +'%Y-%m-%d')"
+          
+          echo "Creating snapshot: $TAG_NAME"
+          
+          git tag -f $TAG_NAME
+          git push origin $TAG_NAME --force
