@@ -47,15 +47,15 @@ jobs:
         git merge upstream/$UPSTREAM_BRANCH --allow-unrelated-histories --no-commit --no-ff || CONFLICT=true
 
         if [ -d ".github/workflows" ]; then
-          mkdir -p .github/upstream-ci
-          git archive MERGE_HEAD .github/workflows | tar -x -C .github/upstream-ci --strip-components=2
+          mkdir -p .github/upstream
+          git archive MERGE_HEAD .github/workflows | tar -x -C .github/upstream --strip-components=2 || true
         fi
-
+        
         git checkout HEAD -- .github/
 
         if [ "$CONFLICT" = true ]; then
           if git diff --name-only --diff-filter=U | grep -q .; then
-            echo "Real conflicts detected!"
+            echo "::error::Real conflicts detected! Manual intervention required."
             exit 1
           fi
         fi
