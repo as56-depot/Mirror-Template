@@ -6,7 +6,8 @@ on:
     - cron: '0 0 1 */4 *'
 
 jobs:
-  create_fossil:
+  repo_snapshot:
+    if: !github.event.repository.is_template
     runs-on: ubuntu-latest
     
     permissions:
