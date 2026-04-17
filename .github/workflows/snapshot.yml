@@ -7,7 +7,7 @@ on:
 
 jobs:
   repo_snapshot:
-    if: !github.event.repository.is_template
+    if: false
     runs-on: ubuntu-latest
     
     permissions:
