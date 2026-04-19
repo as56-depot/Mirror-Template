@@ -39,7 +39,10 @@ jobs:
 
           git checkout upstream/$UPSTREAM_BRANCH -- .
           
-          rm -rf .github/
+          mkdir -p .github/upstream
+          mv .github/workflows/*.yml .github/upstream/ 2>/dev/null || true
+          rm -rf .github/workflows
+          
           git checkout HEAD -- .github/
 
           git add .
